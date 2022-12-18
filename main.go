@@ -76,7 +76,7 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 	for _, edge := range q.Repository.Edges {
 		loc := 0
 
-		// Find the LOC for the requested language on the repository
+		// Find the lines of codes for the requested language on the repository
 		for _, s := range edge.Node.Repository.Languages.Edges {
 			if s.Node.Name == languageQuery {
 				loc = s.Size
@@ -84,7 +84,7 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 			}
 		}
 
-		// The repository contain at least one line of code for the requested language
+		// The repository contains at least one line of code for the requested language
 		if loc > 0 {
 			repos = append(repos, RepositoryLanguage{
 				Name:          edge.Node.Repository.Name,
