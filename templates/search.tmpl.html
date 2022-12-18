@@ -8,8 +8,10 @@
 
 <div>
     {{if len .repos | eq 0 }}
-    <p>Vide</p>
+    <p>Aucun projet récent n'utilise {{ .language }} :(</p>
     {{else}}
+    <p>{{ .language }} : {{ .sumloc }}</p>
+
     <ul>
         {{ range $repo := .repos }}
         <li><a href="{{ .Url }}">{{ .NameWithOwner }}</a>: {{ .Loc }}</li>

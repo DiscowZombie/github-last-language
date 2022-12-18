@@ -103,9 +103,19 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 	})
 
 	c.HTML(http.StatusOK, "search.tmpl.html", gin.H{
-		"title": WebsiteTitle,
-		"repos": repos,
+		"title":    WebsiteTitle,
+		"language": languageQuery,
+		"sumloc":   sumLoc(&repos),
+		"repos":    repos,
 	})
+}
+
+func sumLoc(repos *[]RepositoryLanguage) int {
+	result := 0
+	for _, language := range *repos {
+		result += language.Loc
+	}
+	return result
 }
 
 func main() {
