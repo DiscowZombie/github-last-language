@@ -15,6 +15,49 @@
         <li><a href="{{ .Url }}">{{ .NameWithOwner }}</a>: {{ .Loc }}</li>
         {{ end }}
     </ul>
+
+    <br/>
+
+    <div style="height: 5%; width: 30%">
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <!-- Pie chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        function random_rgb() {
+            const ro = Math.round // Round
+            const r = Math.random
+            const m = 255 // Max value
+            return 'rgb(' + ro(r()*m) + ',' + ro(r()*m) + ',' + ro(r()*m) + ')'
+        }
+
+        const data = {
+            labels: [
+                {{ range $repo := .repos }}
+                ' {{ .Name }} ',
+                {{ end }}
+            ],
+            datasets: [{
+                data: [
+                    {{ range $repo := .repos }}
+                    {{ .Loc }},
+                    {{ end }}
+                ],
+                backgroundColor: [
+                    {{ range $repo := .repos }}
+                    random_rgb(),
+                    {{ end }}
+                ]
+            }]
+        }
+
+        new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: data,
+        })
+    </script>
     {{end}}
 </div>
 

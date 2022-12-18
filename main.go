@@ -14,6 +14,7 @@ import (
 const WebsiteTitle = "Github Last Language"
 
 type RepositoryLanguage struct {
+	Name          string
 	NameWithOwner string
 	Url           string
 	// GitHub returns the number of bytes of code, not exactly the number of lines
@@ -44,6 +45,7 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 			Edges           []struct {
 				Node struct {
 					Repository struct {
+						Name          string
 						NameWithOwner string
 						Url           string
 						Languages     struct {
@@ -87,9 +89,11 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 		// The repository contain at least one line of code for the requested language
 		if loc > 0 {
 			repos = append(repos, RepositoryLanguage{
+				Name:          edge.Node.Repository.Name,
 				NameWithOwner: edge.Node.Repository.NameWithOwner,
 				Url:           edge.Node.Repository.Url,
-				Loc:           loc})
+				Loc:           loc,
+			})
 		}
 	}
 
