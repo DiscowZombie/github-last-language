@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>{{ .title }} - Recherche</title>
+</head>
+<body>
+
+<div>
+    {{if len .repos | eq 0 }}
+    <p>Vide</p>
+    {{else}}
+    <ul>
+        {{ range $repo := .repos }}
+        <li><a href="{{ .Repository.HTMLURL }}">{{ .Repository.Owner.Login }}/{{ .Repository.Name }}</a> - LOC: {{ .Loc }}</li>
+        {{ end }}
+    </ul>
+    {{end}}
+</div>
+
+</body>
+</html>

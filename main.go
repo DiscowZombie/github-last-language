@@ -5,26 +5,41 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-github/v48/github"
+	"golang.org/x/oauth2"
 	"net/http"
+	"os"
 )
 
 const WebsiteTitle = "Github Last Language"
+
+type RepositoryLanguage struct {
+	Repository *github.Repository
+	Loc        int
+}
 
 func handleMain(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.tmpl.html", gin.H{
 		"title": WebsiteTitle,
 	})
+
+	// TODO retrieve (and propose) all github langs?
 }
 
 // TODO context par value or ptr?
 func handleSearch(ctx *context.Context, ghClient *github.Client, c *gin.Context) {
+	languageQuery := c.Query("language")
+	if languageQuery == "" {
+		c.Redirect(http.StatusUnprocessableEntity, "/")
+		return
+	}
+
 	// Get repositories
 	search := &github.SearchOptions{
 		Sort:  "updated",
 		Order: "desc",
 		ListOptions: github.ListOptions{
 			Page:    1,
-			PerPage: 100,
+			PerPage: 10, // TODO
 		},
 	}
 
@@ -35,25 +50,46 @@ func handleSearch(ctx *context.Context, ghClient *github.Client, c *gin.Context)
 		return
 	}
 
-	// Filter matched repositories
-	var matched []*github.Repository
+	// TODO uppercase first letter
+	requestedLang := languageQuery
+
+	var repos []RepositoryLanguage
+
 	for _, repo := range repositories.Repositories {
-		if repo.GetLanguage() == "Java" {
-			matched = append(matched, repo)
+		languages, _, err := ghClient.Repositories.ListLanguages(*ctx, repo.GetOwner().GetLogin(), repo.GetName())
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+			return
+		}
+
+		// Lines of codes for the request lang
+		loc := languages[requestedLang]
+
+		if loc > 0 {
+			repos = append(repos, RepositoryLanguage{Repository: repo, Loc: loc})
 		}
 	}
 
-	for _, repository := range matched {
-		fmt.Printf("URL: %s\n", *repository.URL)
-	}
-
-	c.Status(http.StatusOK)
+	c.HTML(http.StatusOK, "search.tmpl.html", gin.H{
+		"title": WebsiteTitle,
+		"repos": repos,
+	})
 }
 
 func main() {
-	// Github client
-	ghClient := github.NewClient(nil)
 	ctx := context.Background()
+
+	var client *http.Client
+
+	env, envSet := os.LookupEnv("GITHUB_TOKEN")
+	if envSet {
+		// Auth to GitHub with a personal access token
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: env})
+		client = oauth2.NewClient(ctx, ts)
+	}
+
+	// Github client
+	ghClient := github.NewClient(client)
 
 	// Router
 	r := gin.Default()
