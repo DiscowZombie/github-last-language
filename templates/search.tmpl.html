@@ -12,7 +12,7 @@
     {{else}}
     <ul>
         {{ range $repo := .repos }}
-        <li><a href="{{ .Repository.HTMLURL }}">{{ .Repository.Owner.Login }}/{{ .Repository.Name }}</a> - LOC: {{ .Loc }}</li>
+        <li><a href="{{ .Url }}">{{ .NameWithOwner }}</a>: {{ .Loc }}</li>
         {{ end }}
     </ul>
     {{end}}

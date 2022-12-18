@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/google/go-github/v48/github"
+	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 	"net/http"
 	"os"
@@ -13,60 +13,82 @@ import (
 const WebsiteTitle = "Github Last Language"
 
 type RepositoryLanguage struct {
-	Repository *github.Repository
-	Loc        int
+	NameWithOwner string
+	Url           string
+	// GitHub returns the number of bytes of code, not exactly the number of lines
+	Loc int
 }
 
 func handleMain(c *gin.Context) {
+	// Unfortunately GitHub does not provide any endpoint to retrieve a list of languages
 	c.HTML(http.StatusOK, "index.tmpl.html", gin.H{
 		"title": WebsiteTitle,
 	})
-
-	// TODO retrieve (and propose) all github langs?
 }
 
 // TODO context par value or ptr?
-func handleSearch(ctx *context.Context, ghClient *github.Client, c *gin.Context) {
+func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Context) {
 	languageQuery := c.Query("language")
 	if languageQuery == "" {
-		c.Redirect(http.StatusUnprocessableEntity, "/")
+		// Missing required parameter
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	// Get repositories
-	search := &github.SearchOptions{
-		Sort:  "updated",
-		Order: "desc",
-		ListOptions: github.ListOptions{
-			Page:    1,
-			PerPage: 10, // TODO
-		},
+	// TODO Update request
+	// Make the request
+	var q struct {
+		Repository struct {
+			RepositoryCount int
+			Edges           []struct {
+				Node struct {
+					Repository struct {
+						NameWithOwner string
+						Url           string
+						Languages     struct {
+							TotalCount int
+							Edges      []struct {
+								Size int
+								Node struct {
+									Name string
+								}
+							}
+						} `graphql:"languages(first: 100)"`
+					} `graphql:"... on Repository"`
+				}
+			}
+		} `graphql:"search(query: \"is:public sort:author-date-desc\", type: REPOSITORY, first: 100)"`
 	}
 
-	repositories, resp, err := ghClient.Search.Repositories(*ctx, "archived:false", search)
+	err := ghClient.Query(*ctx, &q, nil)
+
 	// Check request response
-	if err != nil || resp.StatusCode != http.StatusOK {
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	// TODO uppercase first letter
-	requestedLang := languageQuery
-
 	var repos []RepositoryLanguage
 
-	for _, repo := range repositories.Repositories {
-		languages, _, err := ghClient.Repositories.ListLanguages(*ctx, repo.GetOwner().GetLogin(), repo.GetName())
-		if err != nil {
-			fmt.Printf("err: %v\n", err)
-			return
+	// Iterate each repository
+	for _, edge := range q.Repository.Edges {
+		loc := 0
+
+		// Find the LOC for the requested language on the repository
+		for _, s := range edge.Node.Repository.Languages.Edges {
+			if s.Node.Name == languageQuery {
+				loc = s.Size
+				break
+			}
 		}
 
-		// Lines of codes for the request lang
-		loc := languages[requestedLang]
-
+		// The repository contain at least one line of code for the requested language
 		if loc > 0 {
-			repos = append(repos, RepositoryLanguage{Repository: repo, Loc: loc})
+			repos = append(repos, RepositoryLanguage{
+				NameWithOwner: edge.Node.Repository.NameWithOwner,
+				Url:           edge.Node.Repository.Url,
+				Loc:           loc})
 		}
 	}
 
@@ -89,7 +111,7 @@ func main() {
 	}
 
 	// Github client
-	ghClient := github.NewClient(client)
+	ghClient := githubv4.NewClient(client)
 
 	// Router
 	r := gin.Default()
