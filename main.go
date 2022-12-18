@@ -8,6 +8,7 @@ import (
 	"golang.org/x/oauth2"
 	"net/http"
 	"os"
+	"sort"
 )
 
 const WebsiteTitle = "Github Last Language"
@@ -91,6 +92,11 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 				Loc:           loc})
 		}
 	}
+
+	// Sort the returned list of repositories
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].Loc > repos[j].Loc // DESC
+	})
 
 	c.HTML(http.StatusOK, "search.tmpl.html", gin.H{
 		"title": WebsiteTitle,
