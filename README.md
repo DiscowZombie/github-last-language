@@ -11,7 +11,7 @@ Par défaut, le serveur fonctionne sur le port 8080 et propose deux routes :
 - `search` avec un paramètre `language`, par ex. `search?language=Go` : Page affichant les derniers projets GitHub
   utilisant le langage en paramètre.
 
-![Exemple d'usage de la page search du programme](assets/image1.png)
+![Exemple d'usage de la page search du programme](assets/example.png)
 
 ## Installation
 
