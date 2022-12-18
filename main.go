@@ -141,6 +141,8 @@ func main() {
 
 	// Router
 	r := gin.Default()
+	// The application will not be run behind a reverse proxy
+	_ = r.SetTrustedProxies(nil)
 
 	// Load html templates
 	r.LoadHTMLGlob("templates/*")
