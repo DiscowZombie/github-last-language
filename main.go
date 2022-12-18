@@ -28,7 +28,6 @@ func handleMain(c *gin.Context) {
 	})
 }
 
-// TODO context par value or ptr?
 func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Context) {
 	languageQuery := c.Query("language")
 	if languageQuery == "" {
