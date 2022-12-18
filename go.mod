@@ -1,4 +1,4 @@
-module github-last-language
+module github.com/discowzombie/github-last-language
 
 go 1.19
 
