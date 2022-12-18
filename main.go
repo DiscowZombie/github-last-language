@@ -104,11 +104,19 @@ func main() {
 	var client *http.Client
 
 	env, envSet := os.LookupEnv("GITHUB_TOKEN")
-	if envSet {
-		// Auth to GitHub with a personal access token
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: env})
-		client = oauth2.NewClient(ctx, ts)
+	if !envSet {
+		/*
+			Generate a token from https://github.com/settings/tokens with the "public_repo" scope.
+			"Fine-grained tokens" are not supported to access the GitHub GraphQL API for now.
+		*/
+		fmt.Printf("The env variable \"GITHUB_TOKEN\" should contain a classic token obtained from https://github.com/settings/tokens with the \"public_repo\" scope.")
+		os.Exit(1)
+		return
 	}
+
+	// Auth to GitHub with a personal access token
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: env})
+	client = oauth2.NewClient(ctx, ts)
 
 	// Github client
 	ghClient := githubv4.NewClient(client)
@@ -128,6 +136,7 @@ func main() {
 	// Start the web-server on 0.0.0.0:8080
 	err := r.Run()
 	if err != nil {
-		_ = fmt.Errorf("unable to start web-server: %v", err)
+		fmt.Printf("unable to start web-server: %v", err)
+		os.Exit(2)
 	}
 }
