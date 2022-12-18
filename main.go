@@ -36,7 +36,6 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 		return
 	}
 
-	// TODO Update request
 	// Make the request
 	var q struct {
 		Repository struct {
@@ -59,7 +58,7 @@ func handleSearch(ctx *context.Context, ghClient *githubv4.Client, c *gin.Contex
 					} `graphql:"... on Repository"`
 				}
 			}
-		} `graphql:"search(query: \"is:public sort:author-date-desc\", type: REPOSITORY, first: 100)"`
+		} `graphql:"search(query: \"is:public created:2022-12-18..* sort:updated-desc\", type: REPOSITORY, last: 100)"`
 	}
 
 	err := ghClient.Query(*ctx, &q, nil)
