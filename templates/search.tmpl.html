@@ -10,11 +10,11 @@
     {{if len .repos | eq 0 }}
     <p>Aucun projet récent n'utilise {{ .language }} :(</p>
     {{else}}
-    <p>{{ .language }} : {{ .sumloc }}</p>
+    <p>{{ .language }} : {{ .sumloc }} bytes</p>
 
     <ul>
         {{ range $repo := .repos }}
-        <li><a href="{{ .Url }}">{{ .NameWithOwner }}</a>: {{ .Loc }}</li>
+        <li><a href="{{ .Url }}">{{ .NameWithOwner }}</a>: {{ .Loc }} bytes</li>
         {{ end }}
     </ul>
 
